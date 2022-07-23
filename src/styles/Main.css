@@ -1,0 +1,45 @@
+.main{
+    text-align: center;
+    color: rgb(255, 255, 255);
+    margin:0 auto;
+    
+    font-size: 20px;
+    font-family: 'Courier New', Courier, monospace, Times, serif, serif;
+}
+
+
+.submit-button{
+    border: none;
+    height: 35px;
+    width: 100px;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 1000;
+    background-color: rgb(168, 181, 158);
+}
+.submit-button:hover{
+    background-color:rgb(39, 81, 118);
+    color: aliceblue;
+    
+}
+
+.buttons{
+    display: flex;
+    flex-direction: row;
+    column-gap: 3px;
+    align-self: center;
+    justify-content: center;
+}
+
+.radio-api{
+    display: flex;
+    flex-direction: column;
+    row-gap: 4px;
+    justify-content: center;
+  
+    
+}
+.option{
+  /* width: 300px; */
+
+}
