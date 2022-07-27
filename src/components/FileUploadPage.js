@@ -27,64 +27,132 @@ export function FileUploadPage() {
     var bodyFormData = new FormData();
     bodyFormData.append("file", selectedFile);
     bodyFormData.append("destination-file-name", DEST_FILENAME);
+    let FINAL_TRANSCRIPTION_REQUEST_LINK = UPLOAD_TRANSCRIBE_FILE;
+    let api = "";
+    if (document.getElementById("assembly").checked) {
+      //Male radio button is checked
+      api = "assembly";
+    } else if (document.getElementById("deepgram").checked) {
+      //Female radio button is checked
+      api = "deepgram";
+    }
+    FINAL_TRANSCRIPTION_REQUEST_LINK =
+      FINAL_TRANSCRIPTION_REQUEST_LINK + "/" + api;
 
     axios({
       method: "post",
-      url: UPLOAD_TRANSCRIBE_FILE,
+      url: FINAL_TRANSCRIPTION_REQUEST_LINK,
       data: bodyFormData,
       headers: { "Content-Type": "multipart/form-data" },
     })
       .then(function (response) {
-        console.log(response.data);
-        const utterances = response.data.utterances;
-        let finalText =
-          "<!DOCTYPE html><html><head><title>Transcription</title><style>mark.red {color:#ff0000;background: none;}mark.blue {color:#0000A0;background: none;}</style></head><body>";
+        if (api === "assembly") {
+          console.log(response.data);
+          const utterances = response.data.utterances;
+          let finalText =
+            "<!DOCTYPE html><html><head><title>Transcription</title><style>mark.red {color:#ff0000;background: none;}mark.blue {color:#0000A0;background: none;}</style></head><body>";
 
-        for (let i = 0; i < utterances.length; i++) {
-          let speaker = utterances[i].speaker;
+          for (let i = 0; i < utterances.length; i++) {
+            let speaker = utterances[i].speaker;
 
-          let text = utterances[i].text;
+            let text = utterances[i].text;
 
-          if (speaker == "A") {
-            finalText = finalText + "<p>" + speaker + ":";
-          } else {
-            if (speaker == "B") {
-              finalText = finalText + "<p><em>" + speaker + ":";
+            if (speaker == "A") {
+              finalText = finalText + "<p>" + speaker + ":";
+            } else {
+              if (speaker == "B") {
+                finalText = finalText + "<p><em>" + speaker + ":";
+              }
             }
-          }
-          for (let word = 0; word < utterances[i].words.length; word++) {
-            if (utterances[i].words[word].confidence < 0.8) {
+            for (let word = 0; word < utterances[i].words.length; word++) {
+              if (utterances[i].words[word].confidence < 0.8) {
+                finalText =
+                  finalText +
+                  '<mark class="red">' +
+                  utterances[i].words[word].text +
+                  "</mark>";
+              } else {
+                finalText = finalText + utterances[i].words[word].text;
+              }
               finalText =
                 finalText +
-                '<mark class="red">' +
-                utterances[i].words[word].text +
-                "</mark>";
-            } else {
-              finalText = finalText + utterances[i].words[word].text;
+                "(" +
+                utterances[i].words[word].confidence +
+                ")" +
+                " ";
             }
-            finalText =
-              finalText +
-              "(" +
-              utterances[i].words[word].confidence +
-              ")" +
-              " ";
+            if (speaker == "A") {
+              finalText = finalText + "</p><br>";
+            } else {
+              if (speaker == "B") finalText = finalText + "</em></p><br>";
+            }
           }
-          if (speaker == "A") {
-            finalText = finalText + "</p><br>";
-          } else {
-            if (speaker == "B") finalText = finalText + "</em></p><br>";
+          finalText =
+            finalText +
+            "<p>*Numerele din paranteza reprezinta nivelul de acuratete al traducerii pentru fiecare cuvant</p>";
+          finalText =
+            finalText +
+            "<p>*Cuvintele marcate cu rosu sunt cuvintele care nu sunt sigur ca au fost convertite corect</p>";
+          finalText = finalText + "</body></html>";
+          setLoading(false);
+          setResponseTextContent(finalText);
+          setTranscriptionFin(true);
+        } else {
+          if (api === "deepgram") {
+            let speaker;
+            let finalText =
+            "<!DOCTYPE html><html><head><title>Transcription</title><style>mark.red {color:#ff0000;background: none;}mark.blue {color:#0000A0;background: none;}</style></head><body>";
+
+              console.log(response);
+              let transcriptedPhrases = response.data;
+              for (let i = 0; i < transcriptedPhrases.length; i++) {
+               speaker = transcriptedPhrases[i].speaker;
+                if (speaker === 0) {
+                  finalText = finalText + "<p>" + speaker + ":";
+                } else {
+                  if (speaker === 1) {
+                    finalText = finalText + "<p><em>" + speaker + ":";
+                  }
+                }
+
+
+                  for (let j = 0;j< transcriptedPhrases[i].words.length;j++){
+                    let word = transcriptedPhrases[i].words[j];
+                    let wordConfidence = word.confidence
+                    let wordText = word.word;
+
+                    if (wordConfidence < 0.8) {
+                      finalText =
+                        finalText +
+                        '<mark class="red">' +
+                       wordText +
+                        "</mark>";
+                    } else {
+                      finalText = finalText + wordText;
+                    }
+                    finalText =
+                      finalText +
+                      "(" +
+                      wordConfidence +
+                      ")" +
+                      " ";
+
+                  }
+
+              }
+              if (speaker === 0 ) {
+                finalText = finalText + "</p><br>";
+              } else {
+                if (speaker === 1) finalText = finalText + "</em></p><br>";
+              }
+
+
+              finalText = finalText + "</body></html>";
+              setLoading(false);
+          setResponseTextContent(finalText);
+          setTranscriptionFin(true);
           }
         }
-        finalText =
-          finalText +
-          "<p>*Numerele din paranteza reprezinta nivelul de acuratete al traducerii pentru fiecare cuvant</p>";
-        finalText =
-          finalText +
-          "<p>*Cuvintele marcate cu rosu sunt cuvintele care nu sunt sigur ca au fost convertite corect</p>";
-        finalText = finalText + "</body></html>";
-        setLoading(false);
-        setResponseTextContent(finalText);
-        setTranscriptionFin(true);
       })
       .catch(function (response) {
         console.log(response);
@@ -104,9 +172,7 @@ export function FileUploadPage() {
   };
   return (
     <>
-      <div className="sign-section">
-        <img></img>
-      </div>
+      <div className="sign-section"></div>
       <div className="main">
         <h1>Audio Transcription</h1>
         <label for="input-audio">
@@ -118,20 +184,27 @@ export function FileUploadPage() {
             onChange={changeHandler}
           />
         </label>
-        <br></br><br></br>
-        <label>Pick and api:</label><br/>
+        <br></br>
+        <br></br>
+        <label>Pick a transcription provider:</label>
+        <br />
         <div className="radio-api">
           <div className="option">
-        <input type="radio" id="assembly" name="apis" value="Assembly AI Api" />
-        <label for="assembly">Assembly AI</label>
+            <input
+              type="radio"
+              id="assembly"
+              name="apis"
+              value="Assembly AI Api"
+            />
+            <label for="assembly">Assembly AI</label>
+          </div>
+
+          <div className="option">
+            <input type="radio" id="deepgram" name="apis" value="Other Api" />
+            <label for="other">DeepGram</label>
+          </div>
         </div>
-  
-        <div className="option">
-        <input type="radio" id="other" name="apis" value="Other Api" />
-        <label for="other">Other</label>
-        </div>
-        </div>
-        
+
         {isSelected ? (
           <div className="loading-section">
             <p>Filename: {selectedFile.name}</p>
@@ -142,17 +215,20 @@ export function FileUploadPage() {
             </p>
           </div>
         ) : null}
-        <br></br> 
+        <br></br>
         <div>
           <div className="buttons">
             <button className="submit-button" onClick={handleSubmission}>
               Submit
             </button>
             <button className="submit-button">Test performance</button>
+            {transcriptionFin ? (
+              <button className="submit-button" onClick={downloadTxtFile}>
+                Download
+              </button>
+            ) : null}
           </div>
-          {transcriptionFin ? (
-            <button onClick={downloadTxtFile}>Download</button>
-          ) : null}
+
           <br></br>
           {loading ? <SpinnerCircular size={30} color="red" /> : null}
         </div>
