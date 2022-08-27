@@ -1,8 +1,8 @@
 body {
   margin: 0;
-  background-image: url('./images/nato.webp');
+  background-image: url('./images/night.jpg');
   
-
+  background-size: cover;
   background-repeat: no-repeat;
 
   background-position-y: -70px;

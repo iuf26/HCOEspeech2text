@@ -221,7 +221,7 @@ export function FileUploadPage() {
             <button className="submit-button" onClick={handleSubmission}>
               Submit
             </button>
-            <button className="submit-button">Test performance</button>
+            {/* <button className="submit-button">Test performance</button> */}
             {transcriptionFin ? (
               <button className="submit-button" onClick={downloadTxtFile}>
                 Download
