@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import { SpinnerCircular } from "spinners-react";
 import "../styles/Main.css";
@@ -6,12 +6,13 @@ import { EvaluateTranscription } from "./EvaluateTranscription";
 
 export function FileUploadPage() {
   let [loading, setLoading] = useState(false);
-
   const UPLOAD_TRANSCRIBE_FILE = "http://localhost:5000/uploadfile";
   const [selectedFile, setSelectedFile] = useState();
   const [isSelected, setIsSelected] = useState(false);
   const [responseTextContent, setResponseTextContent] = useState("");
   const [transcriptionFin, setTranscriptionFin] = useState(false);
+  const checkboxRef = useRef(null);
+
   const changeHandler = (event) => {
     setSelectedFile(event.target.files[0]);
     setIsSelected(true);
@@ -47,45 +48,55 @@ export function FileUploadPage() {
           let finalText =
             "<!DOCTYPE html><html><head><title>Transcription</title><style>mark.red {color:#ff0000;background: none;}mark.blue {color:#0000A0;background: none;}</style></head><body>";
 
-          for (let i = 0; i < utterances.length; i++) {
-            let speaker = utterances[i].speaker;
-
-            if (speaker === "A") {
-              finalText = finalText + "<p>" + speaker + ":";
-            } else {
-              if (speaker === "B") {
-                finalText = finalText + "<p><em>" + speaker + ":";
+          if (!checkboxRef.current.checked) {
+            for (let i = 0; i < utterances.length; i++) {
+              let speaker = utterances[i].speaker;
+              if (speaker === "A") {
+                finalText = finalText + "<p>" + speaker + ":";
+              } else {
+                if (speaker === "B") {
+                  finalText = finalText + "<p><em>" + speaker + ":";
+                }
               }
-            }
-            for (let word = 0; word < utterances[i].words.length; word++) {
-              if (utterances[i].words[word].confidence < 0.8) {
+              for (let word = 0; word < utterances[i].words.length; word++) {
+                if (utterances[i].words[word].confidence < 0.8) {
+                  finalText =
+                    finalText +
+                    '<mark class="red">' +
+                    utterances[i].words[word].text +
+                    "</mark>";
+                } else {
+                  finalText = finalText + utterances[i].words[word].text;
+                }
                 finalText =
                   finalText +
-                  '<mark class="red">' +
-                  utterances[i].words[word].text +
-                  "</mark>";
-              } else {
-                finalText = finalText + utterances[i].words[word].text;
+                  "(" +
+                  utterances[i].words[word].confidence +
+                  ")" +
+                  " ";
               }
-              finalText =
-                finalText +
-                "(" +
-                utterances[i].words[word].confidence +
-                ")" +
-                " ";
+              if (speaker === "A") {
+                finalText = finalText + "</p><br>";
+              } else {
+                if (speaker === "B") finalText = finalText + "</em></p><br>";
+              }
             }
-            if (speaker === "A") {
-              finalText = finalText + "</p><br>";
-            } else {
-              if (speaker === "B") finalText = finalText + "</em></p><br>";
+            finalText =
+              finalText +
+              "<p>*Numerele din paranteza reprezinta nivelul de acuratete al traducerii pentru fiecare cuvant</p>";
+            finalText =
+              finalText +
+              "<p>*Cuvintele marcate cu rosu sunt cuvintele care nu sunt sigur ca au fost convertite corect</p>";
+          } else {
+            for (let i = 0; i < utterances.length; i++) {
+              finalText = `${finalText}<p>`;
+              for (let word = 0; word < utterances[i].words.length; word++) {
+                finalText = `${finalText} ${utterances[i].words[word].text}`;
+              }
+
+              finalText = `${finalText}</p><br>`;
             }
           }
-          finalText =
-            finalText +
-            "<p>*Numerele din paranteza reprezinta nivelul de acuratete al traducerii pentru fiecare cuvant</p>";
-          finalText =
-            finalText +
-            "<p>*Cuvintele marcate cu rosu sunt cuvintele care nu sunt sigur ca au fost convertite corect</p>";
           finalText = finalText + "</body></html>";
           setLoading(false);
           setResponseTextContent(finalText);
@@ -98,36 +109,50 @@ export function FileUploadPage() {
 
             console.log(response);
             let transcriptedPhrases = response.data;
-            for (let i = 0; i < transcriptedPhrases.length; i++) {
-              speaker = transcriptedPhrases[i].speaker;
-              if (speaker === 0) {
-                finalText = finalText + "<p>" + speaker + ":";
-              } else {
-                if (speaker === 1) {
-                  finalText = finalText + "<p><em>" + speaker + ":";
-                }
-              }
-
-              for (let j = 0; j < transcriptedPhrases[i].words.length; j++) {
-                let word = transcriptedPhrases[i].words[j];
-                let wordConfidence = word.confidence;
-                let wordText = word.word;
-
-                if (wordConfidence < 0.8) {
-                  finalText =
-                    finalText + '<mark class="red">' + wordText + "</mark>";
+            if (!checkboxRef.current.checked) {
+              for (let i = 0; i < transcriptedPhrases.length; i++) {
+                speaker = transcriptedPhrases[i].speaker;
+                if (speaker === 0) {
+                  finalText = finalText + "<p>" + speaker + ":";
                 } else {
-                  finalText = finalText + wordText;
+                  if (speaker === 1) {
+                    finalText = finalText + "<p><em>" + speaker + ":";
+                  }
                 }
-                finalText = finalText + "(" + wordConfidence + ")" + " ";
-              }
-            }
-            if (speaker === 0) {
-              finalText = finalText + "</p><br>";
-            } else {
-              if (speaker === 1) finalText = finalText + "</em></p><br>";
-            }
 
+                for (let j = 0; j < transcriptedPhrases[i].words.length; j++) {
+                  let word = transcriptedPhrases[i].words[j];
+                  let wordConfidence = word.confidence;
+                  let wordText = word.word;
+
+                  if (wordConfidence < 0.8) {
+                    finalText =
+                      finalText + '<mark class="red">' + wordText + "</mark>";
+                  } else {
+                    finalText = finalText + wordText;
+                  }
+                  finalText = finalText + "(" + wordConfidence + ")" + " ";
+                }
+              }
+              if (speaker === 0) {
+                finalText = finalText + "</p><br>";
+              } else {
+                if (speaker === 1) finalText = finalText + "</em></p><br>";
+              }
+            } else {
+              for (let i = 0; i < transcriptedPhrases.length; i++) {
+                finalText = `${finalText}<p>`;
+
+                for (let j = 0; j < transcriptedPhrases[i].words.length; j++) {
+                  let word = transcriptedPhrases[i].words[j];
+                  let wordText = word.word;
+
+                  finalText = `${finalText} ${wordText}`;
+                }
+              }
+
+              finalText = `${finalText}"</p><br>`;
+            }
             finalText = finalText + "</body></html>";
             setLoading(false);
             setResponseTextContent(finalText);
@@ -151,6 +176,7 @@ export function FileUploadPage() {
     document.body.appendChild(element);
     element.click();
   };
+
   return (
     <>
       <div className="sign-section"></div>
@@ -183,6 +209,17 @@ export function FileUploadPage() {
           <div className="option">
             <input type="radio" id="deepgram" name="apis" value="Other Api" />
             <label htmlFor="other">DeepGram</label>
+          </div>
+          <div>
+            <label htmlFor="no-decoration">
+              <input
+                type="checkbox"
+                id="no-decoration"
+                name="no-decoration"
+                ref={checkboxRef}
+              ></input>
+              Plain text transcription
+            </label>
           </div>
         </div>
 
