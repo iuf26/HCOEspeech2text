@@ -8,6 +8,7 @@ export function EvaluateTranscription() {
   const [transcribedTextFile, setTranscribedTextFile] = useState();
   const [originalTextFile, setOriginalTextFile] = useState();
   const [comparisonResult, setComparisonResult] = useState({});
+  const [downloadAvailable,setDownloadAvailable] = useState(false);
   const filesTextComparisonUrl = `${environment.apiUrl}/compare-documents`;
 
   const onSubmitButtonClick = () => {
@@ -23,6 +24,7 @@ export function EvaluateTranscription() {
       .then((response) => response.data)
       .then((data) => {
         setComparisonResult(data);
+        setDownloadAvailable(true);
       })
       .catch((error) => console.error(error));
   };
@@ -87,7 +89,7 @@ export function EvaluateTranscription() {
   };
 
   return (
-    <div>
+    <div className="container__evaluate-transcription">
       <h4>Inspect Transcription</h4>
       <label htmlFor="transcribed">Transcription text file:</label>
       <br></br>
@@ -100,7 +102,7 @@ export function EvaluateTranscription() {
         }}
       />
       <br></br>
-      <hr></hr>
+      <br></br>
       <label htmlFor="original">Original text file:</label>
       <br></br>
       <input
@@ -113,13 +115,13 @@ export function EvaluateTranscription() {
       />
       <br></br>
       <br></br>
-      <div>
-        <button className="submit-button" onClick={onSubmitButtonClick}>
+      <div style={{display:"flex",gap:"10px"}}>
+        <button className="submit-button" onClick={() => {setDownloadAvailable(false);onSubmitButtonClick()}}>
           Start comparison
         </button>
-        <button className="submit-button" onClick={onDownloadButtonClick}>
+        { downloadAvailable? <button className="submit-button" onClick={onDownloadButtonClick}>
           Download results
-        </button>
+        </button> : null}
       </div>
     </div>
   );

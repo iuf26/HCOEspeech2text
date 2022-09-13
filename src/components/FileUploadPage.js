@@ -179,11 +179,11 @@ export function FileUploadPage() {
 
   return (
     <>
+  
       <div className="sign-section"></div>
       <div className="main">
-        <h1>Audio Transcription</h1>
         <label htmlFor="input-audio">
-          Pick an audio file for transcription:<br></br>
+          <strong style={{color:"black"}}>Pick an audio file for transcription:</strong><br></br>
           <input
             id="input-audio"
             type="file"
@@ -251,7 +251,7 @@ export function FileUploadPage() {
           {loading ? <SpinnerCircular size={30} color="red" /> : null}
         </div>
       </div>
-      {/* EvaluateTranscription() */}
+      <hr></hr>
       <EvaluateTranscription></EvaluateTranscription>
     </>
   );
