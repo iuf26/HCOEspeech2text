@@ -1,13 +1,23 @@
 body {
   margin: 0;
-  background-image: url('./images/nato.webp');
+  
+  
+  background-size: cover;
+  background-repeat: no-repeat;
+
   background-position-y: -70px;
-  background-color: #eee;
+ 
+  background-color: #D5D5D5;
+ 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html { 
+ font-size: 62.5%;
 }
 
 code {
