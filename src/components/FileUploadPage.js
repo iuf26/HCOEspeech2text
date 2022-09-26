@@ -42,6 +42,8 @@ export function FileUploadPage() {
       headers: { "Content-Type": "multipart/form-data" },
     })
       .then(function(response) {
+        let wordsConfidenceValuesSum = 0;
+        let wordsCounter = 0;
         if (api === "assembly") {
           console.log(response.data);
           const utterances = response.data.utterances;
@@ -68,12 +70,11 @@ export function FileUploadPage() {
                 } else {
                   finalText = finalText + utterances[i].words[word].text;
                 }
-                finalText =
-                  finalText +
-                  "(" +
-                  utterances[i].words[word].confidence +
-                  ")" +
-                  " ";
+                let wordConfidence = utterances[i].words[word].confidence;
+                finalText = `${finalText}(${wordConfidence}) `;
+                wordsCounter++;
+                wordsConfidenceValuesSum =
+                  wordsConfidenceValuesSum + wordConfidence;
               }
               if (speaker === "A") {
                 finalText = finalText + "</p><br>";
@@ -81,12 +82,10 @@ export function FileUploadPage() {
                 if (speaker === "B") finalText = finalText + "</em></p><br>";
               }
             }
-            finalText =
-              finalText +
-              "<p>*Numerele din paranteza reprezinta nivelul de acuratete al traducerii pentru fiecare cuvant</p>";
-            finalText =
-              finalText +
-              "<p>*Cuvintele marcate cu rosu sunt cuvintele care nu sunt sigur ca au fost convertite corect</p>";
+
+            finalText = `${finalText}<br><p><strong>Transcription confidence:${(wordsConfidenceValuesSum /
+              wordsCounter) *
+              100}</strong></p>`;
           } else {
             for (let i = 0; i < utterances.length; i++) {
               finalText = `${finalText}<p>`;
@@ -117,6 +116,8 @@ export function FileUploadPage() {
                 } else {
                   if (speaker === 1) {
                     finalText = finalText + "<p><em>" + speaker + ":";
+                  } else {
+                    finalText = finalText + `<p>Unrecognized:`;
                   }
                 }
 
@@ -124,7 +125,9 @@ export function FileUploadPage() {
                   let word = transcriptedPhrases[i].words[j];
                   let wordConfidence = word.confidence;
                   let wordText = word.word;
-
+                  wordsCounter++;
+                  wordsConfidenceValuesSum =
+                    wordsConfidenceValuesSum + wordConfidence;
                   if (wordConfidence < 0.8) {
                     finalText =
                       finalText + '<mark class="red">' + wordText + "</mark>";
@@ -133,12 +136,20 @@ export function FileUploadPage() {
                   }
                   finalText = finalText + "(" + wordConfidence + ")" + " ";
                 }
+                if (speaker === 0) {
+                  finalText = finalText + "</p>";
+                } else {
+                  if (speaker === 1) {
+                    finalText = finalText + "</em></p>";
+                  } else {
+                    finalText = `${finalText}</p>`;
+                  }
+                }
               }
-              if (speaker === 0) {
-                finalText = finalText + "</p><br>";
-              } else {
-                if (speaker === 1) finalText = finalText + "</em></p><br>";
-              }
+              finalText = `${finalText}<p><strong>Transcription confidence: ${(wordsConfidenceValuesSum /
+                wordsCounter) *
+                100}
+                </strong></p>`;
             } else {
               for (let i = 0; i < transcriptedPhrases.length; i++) {
                 finalText = `${finalText}<p>`;
@@ -151,8 +162,9 @@ export function FileUploadPage() {
                 }
               }
 
-              finalText = `${finalText}"</p><br>`;
+              finalText = `${finalText}</p>`;
             }
+
             finalText = finalText + "</body></html>";
             setLoading(false);
             setResponseTextContent(finalText);
@@ -179,11 +191,13 @@ export function FileUploadPage() {
 
   return (
     <>
-  
       <div className="sign-section"></div>
       <div className="main">
         <label htmlFor="input-audio">
-          <strong style={{color:"black"}}>Pick an audio file for transcription:</strong><br></br>
+          <strong style={{ color: "black" }}>
+            Pick an audio file for transcription:
+          </strong>
+          <br></br>
           <input
             id="input-audio"
             type="file"
