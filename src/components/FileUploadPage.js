@@ -3,6 +3,8 @@ import axios from "axios";
 import { SpinnerCircular } from "spinners-react";
 import "../styles/Main.css";
 import { EvaluateTranscription } from "./EvaluateTranscription";
+import { PieChart } from "./PieChart";
+import { BigTextWrapper, ChartWrapper } from "../styles/components.styles";
 
 export function FileUploadPage() {
   let [loading, setLoading] = useState(false);
@@ -11,6 +13,12 @@ export function FileUploadPage() {
   const [isSelected, setIsSelected] = useState(false);
   const [responseTextContent, setResponseTextContent] = useState("");
   const [transcriptionFin, setTranscriptionFin] = useState(false);
+  const [chartLabels, setChartLabels] = useState(["s", "b"]);
+  const [speakersIntervention, setSpeakersIntervention] = useState([35, 412]);
+  const [
+    overallTranscriptionConfidence,
+    setOverallTranscriptionConfidence,
+  ] = useState(0);
   const checkboxRef = useRef(null);
 
   const changeHandler = (event) => {
@@ -42,6 +50,9 @@ export function FileUploadPage() {
       headers: { "Content-Type": "multipart/form-data" },
     })
       .then(function(response) {
+        let speaker0 = 0;
+        let speaker1 = 0;
+        let speakerOther = 0;
         let wordsConfidenceValuesSum = 0;
         let wordsCounter = 0;
         if (api === "assembly") {
@@ -55,9 +66,13 @@ export function FileUploadPage() {
               let speaker = utterances[i].speaker;
               if (speaker === "A") {
                 finalText = finalText + "<p>" + speaker + ":";
+                speaker0++;
               } else {
                 if (speaker === "B") {
                   finalText = finalText + "<p><em>" + speaker + ":";
+                  speaker1++;
+                } else {
+                  speakerOther++;
                 }
               }
               for (let word = 0; word < utterances[i].words.length; word++) {
@@ -86,6 +101,9 @@ export function FileUploadPage() {
             finalText = `${finalText}<br><p><strong>Transcription confidence:${(wordsConfidenceValuesSum /
               wordsCounter) *
               100}</strong></p>`;
+            setOverallTranscriptionConfidence(
+              (wordsConfidenceValuesSum / wordsCounter) * 100
+            );
           } else {
             for (let i = 0; i < utterances.length; i++) {
               finalText = `${finalText}<p>`;
@@ -96,7 +114,9 @@ export function FileUploadPage() {
               finalText = `${finalText}</p><br>`;
             }
           }
-          finalText = finalText + "</body></html>";
+          setChartLabels(["Speaker A", "Speaker B", "Unrecognized"]);
+          setSpeakersIntervention([speaker0, speaker1, speakerOther]);
+          finalText = `${finalText}</body></html>`;
           setLoading(false);
           setResponseTextContent(finalText);
           setTranscriptionFin(true);
@@ -113,11 +133,14 @@ export function FileUploadPage() {
                 speaker = transcriptedPhrases[i].speaker;
                 if (speaker === 0) {
                   finalText = finalText + "<p>" + speaker + ":";
+                  speaker0++;
                 } else {
                   if (speaker === 1) {
                     finalText = finalText + "<p><em>" + speaker + ":";
+                    speaker1++;
                   } else {
                     finalText = finalText + `<p>Unrecognized:`;
+                    speakerOther++;
                   }
                 }
 
@@ -150,6 +173,9 @@ export function FileUploadPage() {
                 wordsCounter) *
                 100}
                 </strong></p>`;
+              setOverallTranscriptionConfidence(
+                (wordsConfidenceValuesSum / wordsCounter) * 100
+              );
             } else {
               for (let i = 0; i < transcriptedPhrases.length; i++) {
                 finalText = `${finalText}<p>`;
@@ -165,7 +191,9 @@ export function FileUploadPage() {
               finalText = `${finalText}</p>`;
             }
 
-            finalText = finalText + "</body></html>";
+            setChartLabels(["Speaker 0", "Speaker 1", "Unrecognized"]);
+            setSpeakersIntervention([speaker0, speaker1, speakerOther]);
+            finalText = `${finalText}</body></html>`;
             setLoading(false);
             setResponseTextContent(finalText);
             setTranscriptionFin(true);
@@ -265,7 +293,21 @@ export function FileUploadPage() {
           {loading ? <SpinnerCircular size={30} color="red" /> : null}
         </div>
       </div>
+
       <hr></hr>
+      {speakersIntervention.length > 0 && chartLabels.length > 0 ? (
+        <ChartWrapper>
+          <PieChart data={speakersIntervention} labels={chartLabels} />
+          <div>
+            <BigTextWrapper>
+              <p>
+                Overall transcription confidence:
+                {overallTranscriptionConfidence}
+              </p>
+            </BigTextWrapper>
+          </div>
+        </ChartWrapper>
+      ) : null}
       <EvaluateTranscription></EvaluateTranscription>
     </>
   );
