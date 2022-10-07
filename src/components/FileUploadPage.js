@@ -13,8 +13,8 @@ export function FileUploadPage() {
   const [isSelected, setIsSelected] = useState(false);
   const [responseTextContent, setResponseTextContent] = useState("");
   const [transcriptionFin, setTranscriptionFin] = useState(false);
-  const [chartLabels, setChartLabels] = useState(["s", "b"]);
-  const [speakersIntervention, setSpeakersIntervention] = useState([35, 412]);
+  const [chartLabels, setChartLabels] = useState([]);
+  const [speakersIntervention, setSpeakersIntervention] = useState([]);
   const [
     overallTranscriptionConfidence,
     setOverallTranscriptionConfidence,
@@ -302,7 +302,7 @@ export function FileUploadPage() {
             <BigTextWrapper>
               <p>
                 Overall transcription confidence:
-                {overallTranscriptionConfidence}
+                {overallTranscriptionConfidence}%
               </p>
             </BigTextWrapper>
           </div>
